@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Evangelion Card Game</title>
+    <!-- css歸零 -->
+    <link
+      rel="stylesheet"
+      href="https://meyerweb.com/eric/tools/css/reset/reset200802.css"
+    />
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Zen+Antique&display=swap');
+      * {
+        box-sizing: border-box;
+        font-family: 'Zen Antique', serif;
+      }
+      #bg {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+        background: url('./Evangelion/background.jpg') center center / cover
+          no-repeat no-repeat;
+        overflow: hidden;
+      }
+      #container {
+        width: 1000px;
+        height: 800px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+      }
+
+      #game {
+        width: 600px;
+        height: 700px;
+        background: #000d;
+        box-shadow: 0 0 5px 3px #ce0319 inset, 0 0 0 7px #e19f25dd,
+          0 0 5px 10px #ce0319;
+        padding: 50px;
+        border-radius: 10px;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+      }
+      #infoBoard {
+        width: 300px;
+        height: 700px;
+        background: #000d;
+        box-shadow: 0 0 5px 2px #ce0319 inset, 0 0 0 6px #e19f25dd,
+          0 0 5px 8px #ce0319;
+        border-radius: 10px;
+        color: #fff;
+      }
+      #infoContent {
+        height: 95%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-evenly;
+        align-items: center;
+      }
+      #infoContent h3 {
+        font-size: 2.5rem;
+      }
+      .info {
+        font-size: 2rem;
+        width: 200px;
+        display: block;
+        margin-bottom: 10px;
+        height: 90px;
+        border-radius: 5px;
+        border: none;
+        box-shadow: 0 0 3px 1px #ce0319 inset, 0 0 0 4px #ce0319,
+          0 0 3px 5px #ce0319;
+        line-height: 90px;
+      }
+      .info:nth-child(6) {
+        font-size: 1.5rem;
+      }
+      .board {
+        background: #000d;
+        border-radius: 10px;
+      }
+      #startBtn {
+        display: block;
+        position: relative;
+        margin: 50% auto;
+        padding: 20px 80px;
+        box-shadow: none;
+        border-radius: 5px;
+        border: none;
+        box-shadow: 0 0 3px 1px #ce0319 inset, 0 0 0 4px #ce0319,
+          0 0 3px 5px #ce0319;
+        background: #000a;
+        cursor: pointer;
+        color: #ffffff;
+        font-size: 28px;
+        text-decoration: none;
+      }
+      .btn:hover {
+        top: 1px;
+      }
+      .btn:active {
+        top: 2px;
+      }
+      .btn {
+        position: relative;
+        margin: 20px 0 0;
+        padding: 10px 20px;
+        border-radius: 5px;
+        border: none;
+        box-shadow: 0 0 3px 1px #ce0319 inset, 0 0 0 4px #ce0319,
+          0 0 3px 5px #ce0319;
+        background: #000a;
+        cursor: pointer;
+        color: #ffffff;
+        font-size: 28px;
+      }
+
+      .card {
+        width: 83px;
+        height: 120px;
+        position: relative;
+        float: left;
+        margin: 10px;
+        /* 翻面動畫 */
+        transition: transform 0.8s;
+        /* 設定子元素在3D空間內，不然會有遮擋問題 */
+        transform-style: preserve-3d;
+        cursor: pointer;
+        /* 卡片不給拖拉 */
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-user-drag: none;
+      }
+      .card-front {
+        width: 100%;
+        height: 100%;
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        position: absolute;
+        backface-visibility: hidden;
+      }
+      .card-back {
+        width: 100%;
+        height: 100%;
+        background-image: url(./Evangelion/card\ back.png);
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        position: absolute;
+        transform: rotateY(180deg);
+        backface-visibility: hidden;
+        filter: grayscale(25%);
+      }
+
+      .card-close {
+        transform: rotateY(180deg);
+      }
+      .card-ok {
+        cursor: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="bg">
+      <div id="container">
+        <div id="game">
+          <button id="startBtn" class="btn">開始遊戲</button>
+        </div>
+        <div id="infoBoard">
+          <div id="infoContent">
+            <h3>時間</h3>
+            <div id="timeText" class="info">0</div>
+            <h3>最速記録</h3>
+            <div id="bestRecord" class="info"></div>
+            <h3>記録保持者</h3>
+            <div id="bestRecordPlayer" class="info"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- JQuery -->
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.min.js"
+      integrity="sha512-aVKKRRi/Q/YV+4mjoKBsE4x3H+BkegoM/em46NNlCqNTmUYADjBbeNefNxYV7giUp0VxICtqdrbqU7iVaeZNXA=="
+      crossorigin="anonymous"
+    ></script>
+
+    <!-- sweetalert2 -->
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/11.6.1/sweetalert2.all.min.js"
+      integrity="sha512-xLNVEmNEzNF+o0AuIls+RHT0MYZK05j7WZxtiWVzVNJdY+LXcGJDGuGI9ibXx3Aqc6/cCESkC7r0Pl3sVE5J7Q=="
+      crossorigin="anonymous"
+    ></script>
+
+    <script>
+      const test = () => {}
+      test()
+
+      //歸零
+      let timer
+      let time = 0
+
+      const bestrecord = localStorage.cardgame
+        ? JSON.parse(localStorage.cardgame)
+        : { name: '', record: '' }
+      $('#bestRecordPlayer').text(bestrecord.name)
+      $('#bestRecord').text(bestrecord.record)
+
+      // 遊戲開始
+      $(`#startBtn`).on(`click`, function () {
+        $(`#startBtn`).css(`display`, `none`) //開始按鈕消失
+        time = 0
+
+        // 在#game裡面加入16張卡
+        for (let i = 0; i < 16; i++) {
+          $(`#game`).append(`
+        <div class="card card-close">
+          <div class="card-front"></div>
+          <div class="card-back"></div>
+        </div>
+        `)
+        }
+
+        for (let i = 0; i < $(`.card`).length; i++) {
+          // 決定數字，兩組1-8。i%8+1
+          const num = (i % ($(`.card`).length / 2)) + 1
+          // 照1-8設定卡牌，設定兩次。這邊是直接修改行內樣式
+          $(`.card`)
+            .eq(i)
+            .find(`.card-front`)
+            .css(`background-image`, `url(./Evangelion/0${num}.png)`)
+          // 插入data-num屬性，方便後面配對
+          $(`.card`).eq(i).attr(`data-num`, num)
+
+          // 設定target常數為隨機0-15
+          const target = Math.round(Math.random() * ($(`.card`).length - 1))
+          // 打散：將第target張卡放在第i張卡後面
+          $(`.card`).eq(target).insertAfter($(`.card`).eq(i))
+        }
+        // 計時
+        timer = setInterval(() => {
+          time++
+          $(`#timeText`).text(time)
+        }, 1000)
+      })
+
+      // 點牌事件
+      $(`#game`).on(`click`, `.card`, function () {
+        // 點一張
+        if (
+          $(`.card:not(.card-close)`).length < 2 && //沒有蓋著的卡小於兩張
+          $(this).hasClass(`card-close`) && //點擊的卡是蓋著的
+          !$(this).hasClass(`card-ok`) //點擊的卡「沒有」配對成功
+        ) {
+          $(this).removeClass(`card-close`) //將點擊的卡翻開
+        }
+
+        // 點第二張
+        if ($(`.card:not(.card-close)`).length === 2) {
+          // 如果跟第一張翻開的牌data-num相同
+          if (
+            $(`.card:not(.card-close)`).eq(0).attr(`data-num`) ===
+            $(`.card:not(.card-close)`).eq(1).attr(`data-num`)
+          ) {
+            $(`.card:not(.card-close)`).addClass(`card-ok`) //將翻開的牌加上card-ok的class
+            $(`.card:not(.card-close)`).fadeTo(800, 100).fadeTo(300, 0) //調整翻開的牌的透明度
+          }
+
+          // 0.8秒計時器
+          setTimeout(() => {
+            // 不管數字一不一樣都將卡片翻回來
+            $(`.card:not(.card-close)`).addClass(`card-close`)
+
+            // 當全部都ok(配對完成時)，跳出過關通知
+            if ($(`.card-ok`).length === $(`.card`).length) {
+              clearInterval(timer)
+              if (
+                time <= bestrecord.record ||
+                bestrecord.record === '' ||
+                bestrecord.record === 0
+              ) {
+                Swal.fire({
+                  title: '遊戲結束，最短時間通關',
+                  text: `總共花了69秒`,
+                  inputPlaceholder: `請輸入名字`,
+                  input: `text`,
+                  background: `#000e`,
+                  padding: `50px 0 `,
+
+                  color: `#FFF`,
+                  inputAttributes: {
+                    required: true //設定名字欄位為必填
+                  },
+                  customClass: {
+                    confirmButton: `btn`
+                  },
+                  buttonsStyling: false,
+                  validationMessage: `名稱必填`,
+                  allowOutsideClick: false,
+                  allowEscapeKey: false
+                }).then((result) => {
+                  bestrecord.record = time //設定最速紀錄為本次遊戲的時間
+                  bestrecord.name = result.value //設定名字為輸入的值
+                  $(`#bestRecordPlayer`).text(bestrecord.name) //設定最速紀錄玩家名字
+                  $(`#bestRecord`).text(bestrecord.record) //設定紀錄分文字
+
+                  //將最高分物件轉換為文字存入localstorage
+                  localStorage.cardgame = JSON.stringify(bestrecord)
+                  time = 0
+                  $(`#timeText`).text(time)
+                })
+              } else {
+                Swal.fire({
+                  title: `遊戲結束`,
+                  text: `總共花了${time}秒`,
+                  confirmButtonText: `確認`,
+                  background: `#000e`,
+                  padding: `50px 0 `,
+                  color: `#FFF`,
+                  customClass: {
+                    confirmButton: `btn`
+                  },
+                  buttonsStyling: false
+                }).then(() => {
+                  time = 0
+                  $(`#timeText`).text(time)
+                })
+              }
+              $(`.card`).remove()
+              $(`#startBtn`).css(`display`, ``)
+            }
+          }, 800)
+        }
+      })
+    </script>
+  </body>
+</html>
